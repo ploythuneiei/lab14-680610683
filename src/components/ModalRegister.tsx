@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import type { Registrant } from "../libs/Registrant";
 
 type RegisterForm = {
   fname: string;
@@ -9,7 +9,7 @@ type RegisterForm = {
   items: Item[];
 };
 
-type Item = {
+export type Item = {
   id: string;
   label: string;
   price: number;
@@ -80,6 +80,9 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
     items: false,
   });
 
+
+  const STORAGE_KEY = "lab14.registrant";
+
   const registerBtnOnClick = () => {
     const newErrors = {
       fname: form.fname === "",
@@ -97,22 +100,23 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
     const selectedPlan = plans.find((p) => p.id === form.plan);
 
 
-    // ---- เพิ่มส่วนนี้ ----
-    const newRegistrant = {
-      id: uuidv4(),
+    const newRegistrant: Registrant = {
+      id: Date.now(),
       fullName: `${form.fname} ${form.lname}`,
       gender: form.gender,
       plan: selectedPlan ? selectedPlan.label : "",
-      items: form.items,
       total: total,
-    };
+      items: form.items,
+    }
 
-    const raw = localStorage.getItem("registrants");
-    const existing = raw ? JSON.parse(raw) : [];
-    localStorage.setItem("registrants", JSON.stringify([...existing, newRegistrant]));
-    // ---- จบส่วนที่เพิ่ม ----
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const existing = raw
+      ? JSON.parse(raw)
+      : [];
 
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, newRegistrant]));
     alert(`Registration complete.Please pay money for ${total.toLocaleString()} THB.`);
+    onClose();
   };
 
   return (
@@ -230,14 +234,13 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
                 Promotion📢 Buy all items to get 20% Discount
               </div>
 
-              <div>Total Payment : {computeTotalPayment().toLocaleString()} THB</div>
+              <div >Total Payment : {computeTotalPayment().toLocaleString()} THB</div>
             </div>
 
             <div className="modal-footer">
               <div>
                 <input
-                  className="me-2
-                form-check-input"
+                  className="me-2 form-check-input"
                   type="checkbox"
                   onChange={(e) => (setAgree(e.target.checked))}
                 />I agree to the terms and conditions
