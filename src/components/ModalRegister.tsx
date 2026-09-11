@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Registrant } from "../libs/Registrant";
+import { loadRegistrants, saveRegistrants } from "../libs/Storage"
 
 type RegisterForm = {
   fname: string;
@@ -54,7 +55,7 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const hasDiscount: boolean = form.items.length === extraItems.length;
+  const hasDiscount: boolean = form.items.length > 0 && form.items.length === extraItems.length;
 
   const computeTotalPayment = () => {
     let total = 0;
@@ -64,7 +65,7 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
       total += form.items[i].price;
     }
 
-    if (form.items.length === extraItems.length) {
+    if (hasDiscount) {
       total = total * 0.8;
     }
     return total;
@@ -79,9 +80,6 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
     gender: false,
     items: false,
   });
-
-
-  const STORAGE_KEY = "lab14.registrant";
 
   const registerBtnOnClick = () => {
     const newErrors = {
@@ -99,7 +97,6 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
     const total = computeTotalPayment();
     const selectedPlan = plans.find((p) => p.id === form.plan);
 
-
     const newRegistrant: Registrant = {
       id: Date.now(),
       fullName: `${form.fname} ${form.lname}`,
@@ -109,27 +106,32 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
       items: form.items,
     }
 
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const existing = raw
-      ? JSON.parse(raw)
-      : [];
+    const currentRegistrants: Registrant[] = loadRegistrants();
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, newRegistrant]));
+    saveRegistrants([...currentRegistrants, newRegistrant]);
+
     alert(`Registration complete.Please pay money for ${total.toLocaleString()} THB.`);
     onClose();
   };
 
   return (
     <>
-      <div className="modal fade show d-block" tabIndex={-1} role="dialog">
+      <div
+        className="modal fade show d-block"
+        tabIndex={-1}
+        role="dialog">
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Register CMU Marathon 🏃‍♂️</h5>
-              <button type="button" className="btn-close" onClick={onClose}></button>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={onClose}>
+              </button>
             </div>
 
-            <div className="modal-body">
+            <div className="modal-body text-start">
               <div className="d-flex gap-2">
                 <div>
                   <label className="form-label">First name</label>
@@ -174,17 +176,23 @@ export default function ModalRegister({ onClose }: { onClose: () => void }) {
                   <input
                     className="me-2 form-check-input"
                     type="radio"
+                    id="gender-male"
                     checked={form.gender === "male"}
                     onChange={() => updateForm("gender", "male")}
                   />
-                  Male 👨
+                  <label className="form-check-label me-3" htmlFor="gender-male">
+                    Male 👨
+                  </label>
                   <input
                     className="mx-2 form-check-input"
                     type="radio"
+                    id="gender-female"
                     checked={form.gender === "female"}
                     onChange={() => updateForm("gender", "female")}
                   />
-                  Female 👩
+                  <label className="form-check-label" htmlFor="gender-female">
+                    Female 👩
+                  </label>
                 </div>
                 {
                   errors.gender &&

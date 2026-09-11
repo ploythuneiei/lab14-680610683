@@ -1,23 +1,14 @@
 import { useEffect, useState } from "react";
 import UserRegisterCard from "../components/UserRegisterCard";
 import type { Registrant } from "../libs/Registrant";
+import { loadRegistrants } from "../libs/Storage";
 
 export default function DashboardPage() {
   const [registrants, setRegistrants] = useState<Registrant[]>([]);
 
-  const STORAGE_KEY = "lab14.registrant";
-
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        setRegistrants(JSON.parse(raw));
-      } catch {
-        setRegistrants([]);
-      }
-    }
-
-  }, []);
+    setRegistrants(loadRegistrants());
+  }, [])
 
   return (
     <div className="container mt-4">
@@ -29,7 +20,7 @@ export default function DashboardPage() {
         ) : (
           <>
             <label className="form-label">
-              ผู้ลงทะเบียนแล้ว ({registrants.length}) คน
+              ผู้ลงทะเบียนแล้ว ({registrants.length} คน)
             </label>
             <div className="d-flex flex-column gap-2">
               {registrants.map((r) => (
